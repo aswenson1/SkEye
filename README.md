@@ -1,4 +1,6 @@
 # SkEye
+*** Pronounced "Sky" ***
+
 CEN4907C Design Project (Formerly known as The Citadel)
 
 Members: Sami Al-jamal, Anna Hudson, Timothy Macias, Anders Swenson
