@@ -1,0 +1,25 @@
+# KiCad local state and recovery files
+*.kicad_prl
+*.lck
+~*
+_autosave-*
+*-backups/
+*.bak
+*.bck
+*.kicad_pcb-bak
+*.kicad_sch-bak
+fp-info-cache
+
+# Generated fabrication output
+/gerbers/
+/fabrication/
+*.gbr
+*.gbrjob
+*.drl
+
+# Local tools and operating-system files
+.agents/
+.codex/
+.aws/
+.DS_Store
+Thumbs.db

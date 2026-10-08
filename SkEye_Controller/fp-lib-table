@@ -1,0 +1,1 @@
+(fp_lib_table (version 7) (lib (name "SkEye")(type "KiCad")(uri "${KIPRJMOD}/SkEye.pretty")(options "")(descr "Local draft controller footprints")))
