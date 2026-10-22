@@ -1,0 +1,41 @@
+Pico physical pin,Pico signal,Carrier net
+1,GP0,UART_TX
+2,GP1,UART_RX
+3,GND,GND
+4,GP2,Not connected
+5,GP3,Not connected
+6,GP4,Not connected
+7,GP5,Not connected
+8,GND,GND
+9,GP6,Not connected
+10,GP7,Not connected
+11,GP8,Not connected
+12,GP9,Not connected
+13,GND,GND
+14,GP10,Not connected
+15,GP11,Not connected
+16,GP12,Not connected
+17,GP13,Not connected
+18,GND,GND
+19,GP14,BTN_START_N
+20,GP15,BTN_PAUSE_N
+21,GP16,BTN_RESET_N
+22,GP17,LED_RUN
+23,GND,GND
+24,GP18,LED_TRACK
+25,GP19,LED_FAULT
+26,GP20,Not connected
+27,GP21,Not connected
+28,GND,GND
+29,GP22,Not connected
+30,RUN,Not connected
+31,GP26,Not connected
+32,GP27,Not connected
+33,AGND,GND
+34,GP28,Not connected
+35,ADC_VREF,Not connected
+36,3V3_OUT,+3V3
+37,3V3_EN,Not connected
+38,GND,GND
+39,VSYS,Not connected
+40,VBUS,Not connected
