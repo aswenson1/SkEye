@@ -13,6 +13,7 @@ import threading
 import time
 from dataclasses import dataclass
 from typing import Optional
+import sys
 
 import cv2
 import numpy as np
@@ -26,20 +27,23 @@ class Frame:
 
 class Camera:
     def __init__(self, source: int = 0, width: int = 1280, height: int = 720,
-                 fps: Optional[int] = None):
-        self._cap = cv2.VideoCapture(source)
+                fps: Optional[int] = 30):
+        backend = cv2.CAP_DSHOW if sys.platform == "win32" else cv2.CAP_ANY
+        self._cap = cv2.VideoCapture(source, backend)
         if not self._cap.isOpened():
             raise RuntimeError(f"Could not open camera source: {source}")
 
+        self._cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
         self._cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
         self._cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-        self._cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-        self._cap.set(cv2.CAP_PROP_AUTOFOCUS, 0)
         if fps:
             self._cap.set(cv2.CAP_PROP_FPS, fps)
+        self._cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 
         self.width = int(self._cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.height = int(self._cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        print("fourcc:", int(self._cap.get(cv2.CAP_PROP_FOURCC)).to_bytes(4, "little").decode(),
+            "reported fps:", self._cap.get(cv2.CAP_PROP_FPS))
 
         self._frame: Optional[Frame] = None
         self._index = 0
@@ -86,16 +90,20 @@ class Camera:
 
 if __name__ == "__main__":
     last = -1
-    with Camera(0) as cam:
+    with Camera(0, fps=50) as cam:
         print(f"Opened {cam.width}x{cam.height}")
         while True:
             f = cam.read()
-            if f is None or f.index == last:   # no new frame yet
+            if f is None or f.index == last:
                 if cv2.waitKey(1) & 0xFF == ord("q"):
                     break
                 continue
             last = f.index
-            cv2.imshow("camera", f.image)
+            win = "camera"
+            cv2.imshow(win, f.image)
             if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
+            # make it so the x works
+            if f is not None and cv2.getWindowProperty(win, cv2.WND_PROP_VISIBLE) < 1:
                 break
     cv2.destroyAllWindows()
