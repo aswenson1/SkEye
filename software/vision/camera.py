@@ -72,7 +72,6 @@ class Camera:
         self.stop()
 
     def read(self) -> Optional[Frame]:
-        """Newest frame, or None if no frame has arrived yet."""
         with self._lock:
             return self._frame
 
