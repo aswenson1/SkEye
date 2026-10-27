@@ -30,7 +30,12 @@ Attempts to find the corners of the board
 Returns a NumPy array with the xy coordinates of each corner of the board
 Returns None if not all four ArUco markers are detected
 """
-def detect_corners(corners, ids):
+def detect_corners(image):
+    corners, ids = detect_markers(image)
+    return detect_corners_from_markers(corners, ids)
+
+
+def detect_corners_from_markers(corners, ids):
 
     if len(corners) != 4:
         return None
@@ -57,7 +62,6 @@ def detect_corners(corners, ids):
         box[np.argmin(diffs)],  # bottom-left
     ])
 
-
 def main():
     with Camera(1,0) as cam:
         while True:
@@ -71,7 +75,7 @@ def main():
             if ids is not None:
                 cv2.aruco.drawDetectedMarkers(img, corners, ids)
 
-            board_bounds = detect_corners(corners, ids)
+            board_bounds = detect_corners_from_markers(corners, ids)
             cv2.polylines(img, [board_bounds], True, (0, 255, 0), 3)
 
             if board_bounds is not None:
