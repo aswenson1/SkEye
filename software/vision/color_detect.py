@@ -92,10 +92,6 @@ def main():
             if show_mask:
                 cv2.imshow("mask", mask)
 
-            # Make the window's X button work.
-            if cv2.getWindowProperty(main_win, cv2.WND_PROP_VISIBLE) < 1:
-                break
-
     cv2.destroyAllWindows()
 
 

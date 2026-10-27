@@ -102,7 +102,4 @@ if __name__ == "__main__":
             cv2.imshow(win, f.image)
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 break
-            # make it so the x works
-            if f is not None and cv2.getWindowProperty(win, cv2.WND_PROP_VISIBLE) < 1:
-                break
     cv2.destroyAllWindows()
