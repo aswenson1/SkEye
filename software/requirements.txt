@@ -1,0 +1,4 @@
+opencv-contrib-python==4.10.0.84
+numpy==1.26.4
+pyserial==3.5
+matplotlib==3.11.2
