@@ -20,4 +20,4 @@ fp-info-cache
 
 # Python
 .venv/
-
+__pycache__/
