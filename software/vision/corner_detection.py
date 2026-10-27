@@ -63,7 +63,6 @@ def detect_corners_from_markers(corners, ids):
         box[np.argmin(diffs)],  # bottom-left
     ])
 
-
 def main():
     # loads variables specific to each developer
     load_dotenv()
