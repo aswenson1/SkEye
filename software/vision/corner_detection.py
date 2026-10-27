@@ -63,7 +63,7 @@ def detect_corners_from_markers(corners, ids):
 
 
 def main():
-    with Camera(1,0) as cam:
+    with Camera(0) as cam:
         while True:
             frame = cam.read()
             if frame is None:
@@ -87,6 +87,7 @@ def main():
                 break
 
     cv2.destroyAllWindows()
+
 
 if __name__ == "__main__":
     main()
