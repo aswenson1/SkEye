@@ -36,7 +36,6 @@ def detect_corners(image):
 
 
 def detect_corners_from_markers(corners, ids):
-
     if len(corners) != 4:
         return None
 
@@ -61,6 +60,7 @@ def detect_corners_from_markers(corners, ids):
         box[np.argmax(sums)],   # bottom-right
         box[np.argmin(diffs)],  # bottom-left
     ])
+
 
 def main():
     with Camera(1,0) as cam:
