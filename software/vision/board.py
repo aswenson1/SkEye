@@ -16,7 +16,7 @@ from color_detect import PRESETS, make_mask, find_objects, draw
 
 
 def main():
-    with Camera(1,0) as cam:
+    with Camera(0) as cam:
         while True:
             frame = cam.read()
             if frame is None:
