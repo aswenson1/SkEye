@@ -21,3 +21,6 @@ fp-info-cache
 # Python
 .venv/
 __pycache__/
+
+# Development tools
+**/shell.nix
