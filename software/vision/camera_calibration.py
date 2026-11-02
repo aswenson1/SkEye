@@ -10,8 +10,10 @@ https://docs.opencv.org/4.13.0/dc/dbb/tutorial_py_calibration.html
 """
 
 from camera import Camera
+from dotenv import load_dotenv
 from collections import deque
 import cv2
+import os
 import time
 import sys
 import numpy as np
@@ -19,7 +21,7 @@ from corner_detection import detect_markers, detect_corners_from_markers
 
 
 # Config Variables!
-
+load_dotenv() # loads variables specific to each developer
 STABLE_FRAMES = 30            
 CONNECT_TIMEOUT_S = 5.0
 EDGE_MARGIN_PX = 10
@@ -116,7 +118,7 @@ def main():
     # Try to instantiate the camera.
     print("Attempting to connect to Device 1...")
     try:
-        cam = Camera(4, 0)  
+        cam = Camera(int(os.environ["CAMERA_DEVICE_NO"]), 0)  
     except RuntimeError as e:
         print(f"Camera unable to be connected ({e}). Please reconnect and try again.")
         return 1
