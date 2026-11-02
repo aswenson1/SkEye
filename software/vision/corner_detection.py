@@ -11,6 +11,8 @@ References:
 import cv2
 import numpy as np
 from camera import Camera
+from dotenv import load_dotenv
+import os
 
 aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_6X6_250)
 detector = cv2.aruco.ArucoDetector(aruco_dict, cv2.aruco.DetectorParameters())
@@ -63,7 +65,9 @@ def detect_corners_from_markers(corners, ids):
 
 
 def main():
-    with Camera(0) as cam:
+    # loads variables specific to each developer
+    load_dotenv()
+    with Camera(int(os.environ["CAMERA_DEVICE_NO"]), 0) as cam:
         while True:
             frame = cam.read()
             if frame is None:

@@ -21,7 +21,7 @@ from corner_detection import detect_markers, detect_corners_from_markers
 
 
 # Config Variables!
-load_dotenv() # loads variables specific to each developer
+
 STABLE_FRAMES = 30            
 CONNECT_TIMEOUT_S = 5.0
 EDGE_MARGIN_PX = 10
@@ -115,6 +115,8 @@ def evaluate_frame(img, history):
 # Script to check if camera is calibrated correctly
 # Corner markers are meant to be aligned with the corners of the projection
 def main():
+    # loads variables specific to each developer
+    load_dotenv()
     # Try to instantiate the camera.
     print("Attempting to connect to Device 1...")
     try:
