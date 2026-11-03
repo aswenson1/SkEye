@@ -13,10 +13,13 @@ import numpy as np
 from camera import Camera
 from corner_detection import detect_corners
 from color_detect import PRESETS, make_mask, find_objects, draw
-
+from dotenv import load_dotenv
+import os
 
 def main():
-    with Camera(0) as cam:
+    # loads variables specific to each developer
+    load_dotenv()
+    with Camera(int(os.environ["CAMERA_DEVICE_NO"]), 0) as cam:
         while True:
             frame = cam.read()
             if frame is None:

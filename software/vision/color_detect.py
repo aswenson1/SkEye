@@ -7,7 +7,8 @@
 import cv2
 import numpy as np
 from camera import Camera
-
+from dotenv import load_dotenv
+import os
 
 PRESETS = {
     "red":    [((0, 120, 70), (10, 255, 255)), ((170, 120, 70), (179, 255, 255))],
@@ -61,7 +62,9 @@ def main():
     main_win = "color detect"
     last_index = -1
 
-    with Camera(0) as cam:
+    # loads variables specific to each developer
+    load_dotenv()
+    with Camera(int(os.environ["CAMERA_DEVICE_NO"]), 0) as cam:
         while True:
             f = cam.read()
             key = cv2.waitKey(1) & 0xFF
