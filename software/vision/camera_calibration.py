@@ -114,65 +114,56 @@ def evaluate_frame(img, history):
 
 # Script to check if camera is calibrated correctly
 # Corner markers are meant to be aligned with the corners of the projection
-def main():
-    # loads variables specific to each developer
-    load_dotenv()
-    # Try to instantiate the camera.
-    print("Attempting to connect to Device 1...")
-    try:
-        cam = Camera(int(os.environ["CAMERA_DEVICE_NO"]), 0)  
-    except RuntimeError as e:
-        print(f"Camera unable to be connected ({e}). Please reconnect and try again.")
-        return 1
-    print("Camera connected successfully!\n")
-
+# (19) Updated so that calibration can be called easily elsewhere
+def calibrate(cam):
     results = []
+    corners = None
     last_index = -1
     history = deque(maxlen=STABLE_FRAMES)
     last_new_frame = time.time()
     window_name = "SkEye Calibration View"
     start_time = time.time()
 
-    with cam:
-        # Calibration should only run for a minute
-        while time.time() - start_time < 60:
-            f = cam.read()
+    # Calibration should only run for a minute
+    while time.time() - start_time < 60:
+        f = cam.read()
 
-            if f is None or f.index == last_index:
-                if time.time() - last_new_frame > CONNECT_TIMEOUT_S:
-                    print("No frames received from camera.")
-                    cv2.destroyAllWindows()
-                    return 1
-                if cv2.waitKey(1) & 0xFF == ord("q"):
-                    break
-                continue
-
-            last_index = f.index
-            last_new_frame = time.time()
-            results, board = evaluate_frame(f.image, history)
-
-            if len(results) == 7 and all(ok for ok, _ in results):
+        if f is None or f.index == last_index:
+            if time.time() - last_new_frame > CONNECT_TIMEOUT_S:
+                print("No frames received from camera.")
+                cv2.destroyAllWindows()
                 break
-
-            # Live feedback overlay
-            overlay = f.image.copy()
-            elapsed = time.time() - start_time
-            cv2.putText(overlay, f"Time since calibration start: {elapsed:.1f}s. Max time 60s",
-                        (10, 25 + 22 * len(results)),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.55,
-                        (255, 255, 255), 1, cv2.LINE_AA)
-            # show current calibration statuses
-            for i, (ok, msg) in enumerate(results):
-                cv2.putText(overlay, msg, (10, 25 + 22 * i),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.55,
-                            GREEN if ok else RED, 1, cv2.LINE_AA)
-            cv2.imshow(window_name, overlay)
-
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 break
-            # Closing the window with the X also exits
-            if cv2.getWindowProperty(window_name, cv2.WND_PROP_VISIBLE) < 1:
-                break
+            continue
+
+        last_index = f.index
+        last_new_frame = time.time()
+        results, board = evaluate_frame(f.image, history)
+
+        if len(results) == 7 and all(ok for ok, _ in results):
+            corners = np.mean(np.stack(history), axis=0)
+            break
+
+        # Live feedback overlay
+        overlay = f.image.copy()
+        elapsed = time.time() - start_time
+        cv2.putText(overlay, f"Time since calibration start: {elapsed:.1f}s. Max time 60s",
+                    (10, 25 + 22 * len(results)),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.55,
+                    (255, 255, 255), 1, cv2.LINE_AA)
+        # show current calibration statuses
+        for i, (ok, msg) in enumerate(results):
+            cv2.putText(overlay, msg, (10, 25 + 22 * i),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.55,
+                        GREEN if ok else RED, 1, cv2.LINE_AA)
+        cv2.imshow(window_name, overlay)
+
+        if cv2.waitKey(1) & 0xFF == ord("q"):
+            break
+        # Closing the window with the X also exits
+        if cv2.getWindowProperty(window_name, cv2.WND_PROP_VISIBLE) < 1:
+            break
 
     cv2.destroyAllWindows()
 
@@ -180,11 +171,27 @@ def main():
     for ok, msg in results:
         print(f"  [{'PASS' if ok else 'FAIL'}] {msg}")
 
-    if len(results) == 7 and all(ok for ok, _ in results):
+    if corners is not None:
         print("\nCalibration successful!")
-        return 0
-    print("\nCalibration unsuccessful. Please read the report and try again.")
-    return 1
+    else:
+        print("\nCalibration unsuccessful. Please read the report and try again.")
+    return corners
+
+
+def main():
+    # loads variables specific to each developer
+    load_dotenv()
+    print("Attempting to connect to the camera...")
+    try:
+        cam = Camera(int(os.environ["CAMERA_DEVICE_NO"]))
+    except RuntimeError as e:
+        print(f"Camera unable to be connected ({e}). Please reconnect and try again.")
+        return 1
+    print("Camera connected successfully!\n")
+
+    with cam:
+        corners = calibrate(cam)
+    return 0 if corners is not None else 1
 
 if __name__ == "__main__":
     sys.exit(main())
