@@ -30,22 +30,28 @@ class Board:
     def __init__(self, corners_px):
         # corners_px: 4x2 camera-pixel corners ordered TL, TR, BR, BL.
         self.corners_px = np.asarray(corners_px, dtype=np.float32).reshape(4, 2)
+        # computes homography matrix using opencv built in function
         self._h = cv2.getPerspectiveTransform(self.corners_px, COORDS)
+        # computes inverse matrix for conversion
         self._h_inv = np.linalg.inv(self._h)
 
+    # applies matrix 
     @staticmethod
     def _apply(points, matrix):
         pts = np.asarray(points, dtype=np.float32).reshape(-1, 1, 2)
         return cv2.perspectiveTransform(pts, matrix).reshape(-1, 2)
 
+    # is the point on the board?
     @staticmethod
     def contains(point_board, margin=0.0):
         x, y = point_board
         return -margin <= x <= BOARD_SIZE + margin and -margin <= y <= BOARD_SIZE + margin
 
+    # converts camera pixels to board coordinates
     def to_board(self, points_px):
         return self._apply(points_px, self._h)
 
+    # converts board coordinates to camera pixels
     def to_camera(self, points_board):
         return self._apply(points_board, self._h_inv)
 
