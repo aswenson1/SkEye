@@ -8,14 +8,14 @@ SkEye is a tabletop interactive mapping system that uses AR/XR technology to tra
 
 ## Architectural Elements
 ### External Interface
-SkEye can currently output a window to a computer screen showing the camera output (which should be placed at a birds-eye view above the table), perform a calibration routine (involving detecting the corner markers and ensuring camera health), and track and object, outputting the objects coordinates and current location onto a graph. To connect to the persistent state, the current functionality of SkEye's software allows for recording and playback of object tracking sequences.
+SkEye can output a window to a computer screen showing the camera output, perform a calibration routine, and track an object, outputting the objects coordinates and current location onto the screen. To connect to the persistent state, the current functionality of SkEye's software allows for recording and playback of object tracking sequences.
 
 ### Persistent State
 SkEye allows users to save and play back replays of previous actions occurring on the tabletop. To record, a user can press `s` and move the object around. When finished, pressing `s` saves the recording, which can be replayed, allowing the user to see the location of tokens during the recorded period of time on the displayed graph. This functionality saves playbacks to a persistent JSON file which can be loaded later to play the recording again.
 
 ### Internal Systems
 
-SkEye makes use of the OpenCV library to process images. For example, SkEye uses a script to generate ArUco markers (for corner detection) and detect these markers to determine the bounds of the board. Additionally, SkEye uses modules to normalize the detected board into a coordinate plane, running camera pixels through a matrix to convert from px to coordinates, and an inverse matrix to do the opposite operation.
+SkEye makes use of the OpenCV library to process images. For example, SkEye uses a script to generate ArUco markers (for corner detection) and detect these markers to determine the bounds of the board. Additionally, SkEye uses numpy and OpenCV modules to normalize the detected board into a coordinate plane, running camera pixels through a matrix to convert from px to coordinates, and an inverse matrix to do the opposite operation.
 
 Currently, we are using the OpenCV Python library, but if problems arise with performance when we scale down to a smaller CPU, we may pivot to using C++ to deal with performance constraints. However, Python was chosen for the time being as it made it easy to quickly stand up multiple features for our proof-of-concept.
 
