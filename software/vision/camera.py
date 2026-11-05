@@ -14,6 +14,8 @@ import time
 from dataclasses import dataclass
 from typing import Optional
 import sys
+import os
+from dotenv import load_dotenv
 
 import cv2
 import numpy as np
@@ -88,8 +90,9 @@ class Camera:
 
 
 if __name__ == "__main__":
+    load_dotenv()
     last = -1
-    with Camera(0, fps=50) as cam:
+    with Camera(int(os.environ["CAMERA_DEVICE_NO"]), 0, fps=50) as cam:
         print(f"Opened {cam.width}x{cam.height}")
         while True:
             f = cam.read()

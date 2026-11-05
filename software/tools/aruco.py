@@ -1,11 +1,12 @@
 """
 aruco.py - generate tokens for use with OpenCV
 
-Generate ArUco markers for corner generation
+Generate 4 ArUco markers for corner detection
 
-References: https://www.geeksforgeeks.org/computer-vision/detecting-aruco-markers-with-opencv-and-python-1/
+References: 
+https://www.arucogrid.com/dictionaries/6x6-250/
+https://www.geeksforgeeks.org/computer-vision/detecting-aruco-markers-with-opencv-and-python-1/
 
-Modified to make 4 markers and save them locally for the four corners.
 """
 
 import cv2
@@ -13,7 +14,6 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Define the ArUco dictionary
 aruco_dict = cv2.aruco.getPredefinedDictionary(
     cv2.aruco.DICT_6X6_250
 )

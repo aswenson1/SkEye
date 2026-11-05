@@ -21,3 +21,8 @@ fp-info-cache
 # Python
 .venv/
 __pycache__/
+**/replays/
+
+# Development tools
+**/shell.nix
+.env
