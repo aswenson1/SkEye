@@ -1,0 +1,2 @@
+# Keep local and CI documentation builds reproducible.
+zensical==0.1.0
