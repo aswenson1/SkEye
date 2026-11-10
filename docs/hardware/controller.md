@@ -49,6 +49,4 @@ mounting holes, and sockets for the Pico module. See the complete
 
 ## Status
 
-The design is preliminary. Review and validate it before fabrication or connection
-to external equipment.
-
+The design is preliminary.

@@ -54,7 +54,7 @@ logo = "lucide/telescope"
 repo = "fontawesome/brands/github"
 
 [project.theme.font]
-text = "IBM Plex Mono"
+text = "IBM Plex Sans"
 code = "IBM Plex Mono"
 
 [[project.theme.palette]]
