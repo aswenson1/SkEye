@@ -18,7 +18,6 @@ from camera_calibration import calibrate
 from collections import deque
 from dotenv import load_dotenv
 from camera import Camera
-from corner_detection import detect_markers, detect_corners_from_markers
 from color_detect import PRESETS, PRESET_KEYS, make_mask, find_objects, draw
 
 
@@ -121,7 +120,12 @@ if __name__ == "__main__":
             frame = f.image.copy()
 
             hsv = cv2.cvtColor(cv2.GaussianBlur(frame, (11, 11), 0), cv2.COLOR_BGR2HSV)
-            objects = find_objects(make_mask(hsv, PRESETS[current]))
+            mask = make_mask(hsv, PRESETS[current])
+            if board is not None:
+                board_mask = np.zeros(mask.shape[:2], dtype=np.uint8)
+                cv2.fillPoly(board_mask, [board.corners_px.astype(np.int32)], 255)
+                mask = cv2.bitwise_and(mask, board_mask)
+            objects = find_objects(mask)
             draw(frame, objects, current)
 
             if board is None:

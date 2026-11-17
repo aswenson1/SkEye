@@ -17,7 +17,8 @@ import os
 import time
 import sys
 import numpy as np
-from L_detection import detect_shapes, detect_corners_from_shapes
+from L_detection import detect_shapes, detect_corners_from_shapes, brick_mask
+from color_detect import set_ignore_mask
 
 
 # Config Variables!
@@ -143,6 +144,7 @@ def calibrate(cam):
 
         if len(results) == 7 and all(ok for ok, _ in results):
             corners = np.mean(np.stack(history), axis=0)
+            set_ignore_mask(brick_mask(f.image))
             break
 
         # Live feedback overlay

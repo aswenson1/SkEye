@@ -31,8 +31,16 @@ def make_mask(hsv, ranges):
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, KERNEL)
     return mask
 
+_ignore_mask = None
+
+def set_ignore_mask(mask):
+    global _ignore_mask
+    _ignore_mask = mask
+
 
 def find_objects(mask, min_area=MIN_AREA):
+    if _ignore_mask is not None and _ignore_mask.shape == mask.shape:
+        mask = cv2.bitwise_and(mask, cv2.bitwise_not(_ignore_mask))
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     objects = []
     for c in contours:

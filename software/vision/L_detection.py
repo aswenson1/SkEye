@@ -78,6 +78,18 @@ def _outer_vertex(contour, group_center):
     return hull[np.argmax(dists)]
 
 
+def brick_mask(image, dilate_px=9):
+    """
+    Mask to ignore the L piece bricks when detecting colors on the board (buggy wip))
+    """
+    mask = np.zeros(image.shape[:2], dtype=np.uint8)
+    cv2.drawContours(mask, [s["contour"] for s in detect_shapes(image)], -1, 255, cv2.FILLED)
+    if dilate_px > 0:
+        k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * dilate_px + 1, 2 * dilate_px + 1))
+        mask = cv2.dilate(mask, k)
+    return mask
+
+
 def detect_corners_from_shapes(shapes):
     if len(shapes) != 4:
         return None
