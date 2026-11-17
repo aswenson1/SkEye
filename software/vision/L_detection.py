@@ -57,7 +57,6 @@ def detect_shapes(image, color=CORNER_COLOR, min_area_frac=MIN_AREA_FRAC):
 
 
 def _inner_vertex(contour):
-    """The concave vertex of an L is its deepest convexity defect."""
     hull = cv2.convexHull(contour, returnPoints=False)
     if hull is None or len(hull) < 4:
         return None
