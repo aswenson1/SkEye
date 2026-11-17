@@ -6,13 +6,14 @@ Swap this file out (or add more scenario files) to create new scenarios.
 from __future__ import annotations
 import random
 from dataclasses import dataclass, field
+
+#bull shit
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from core import GameState, Phase
 
 
-#  Hooks
 
 def on_step_end(state: GameState) -> list[str]:
     """Called at the end of each step. Handles spread and HP decay."""
@@ -51,7 +52,7 @@ def on_step_end(state: GameState) -> list[str]:
 
 def check_win_loss(state: GameState):
     """Returns a Phase if the game has ended, otherwise None."""
-    from core import Phase
+    from core import Phases
     if state.firefighter.hp <= 0 or state.trapped.hp <= 0:
         return Phase.LOSS
     if state.trapped.pos == state.scenario.exit_cell and state.ff_found_patient:
@@ -161,12 +162,12 @@ def _build_example_walls():
 
 
 EXAMPLE_SCENARIO = Scenario(
-    name              = "example",
-    cols              = 10,
-    rows              = 10,
-    walls             = _build_example_walls(),
-    fire_origin       = (9, 8),
-    exit_cell         = (0, 5),
+    name = "example",
+    cols = 10,
+    rows = 10,
+    walls = _build_example_walls(),
+    fire_origin = (9, 8),
+    exit_cell = (0, 5),
     firefighter_start = (0, 5),
-    trapped_start     = (9, 2),
+    trapped_start = (9, 2),
 )

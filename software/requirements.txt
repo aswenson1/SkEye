@@ -3,3 +3,4 @@ numpy==1.26.4
 pyserial==3.5
 matplotlib==3.11.2
 python-dotenv>=1.0
+pygame>=2.5

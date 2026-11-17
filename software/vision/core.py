@@ -1,3 +1,10 @@
+"""
+core.py - frame source for SkEye.
+
+TODO: Timothy Macias
+
+References:
+"""
 import cv2
 import pygame
 import numpy as np
@@ -7,67 +14,56 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 from dotenv import load_dotenv
 
+from board import BOARD_SIZE, Board
 from camera import Camera
 from camera_calibration import calibrate
 from color_detect import PRESETS, make_mask, find_objects, draw
 
 from fire_scenario import EXAMPLE_SCENARIO, Scenario
 
-#  Constants
-
-BOARD_SIZE = 100
-COORDS     = np.array([[0,0],[BOARD_SIZE,0],[BOARD_SIZE,BOARD_SIZE],[0,BOARD_SIZE]], dtype=np.float32)
-CELL_SIZE  = 60
+# Constants
+COORDS = np.array([[0,0],[BOARD_SIZE,0],[BOARD_SIZE,BOARD_SIZE],[0,BOARD_SIZE]], dtype=np.float32)
+CELL_SIZE = 60
 HUD_HEIGHT = 80
+# RGBs for colors
+C_BG = (40, 40, 40)
+C_GRID = (80, 80, 80)
+C_WALL = (200, 200, 200)
+C_EXIT = (0, 220, 100)
+C_FF = (220, 60, 60)
+C_TRAPPED = (60, 100, 220)
+C_HUD_BG = (20, 20, 20)
+C_TEXT = (230, 230, 230)
+C_WIN = (30, 180, 30)
+C_LOSS = (180, 30, 30)
 
-#  Board
+# Scenario-supplied env keys to colors, renderable if present in env
+ENV_COLORS = {
+    "fire":  (220, 100, 0),
+    "smoke": (120, 120, 120),
+}
 
-class Board:
-    def __init__(self, corners_px):
-        self.corners_px = np.asarray(corners_px, dtype=np.float32).reshape(4, 2)
-        self._h     = cv2.getPerspectiveTransform(self.corners_px, COORDS)
-        self._h_inv = np.linalg.inv(self._h)
-
-    @staticmethod
-    def _apply(points, matrix):
-        pts = np.asarray(points, dtype=np.float32).reshape(-1, 1, 2)
-        return cv2.perspectiveTransform(pts, matrix).reshape(-1, 2)
-
-    @staticmethod
-    def contains(point_board, margin=0.0):
-        x, y = point_board
-        return -margin <= x <= BOARD_SIZE + margin and -margin <= y <= BOARD_SIZE + margin
-
-    def to_board(self, points_px):
-        return self._apply(points_px, self._h)
-
-
-#  Game state
-
+# Game state
 class Phase(Enum):
-    SETUP  = auto()
+    SETUP = auto()
     ACTIVE = auto()
-    WIN    = auto()
-    LOSS   = auto()
-
+    WIN  = auto()
+    LOSS = auto()
 
 @dataclass
 class TokenState:
     pos: tuple[int, int]
     hp:  int
 
-
 @dataclass
 class GameState:
-    scenario:        Scenario
-    firefighter:     TokenState
-    trapped:         TokenState
-    env:             dict          # scenario-specific state (e.g. fire, smoke)
-    phase:           Phase = Phase.SETUP
-    turn:            int   = 0
+    scenario: Scenario
+    firefighter: TokenState
+    trapped: TokenState
+    env: dict
+    phase: Phase = Phase.SETUP
+    turn: int = 0
     ff_found_patient: bool = False
-
-    #  Reachability
 
     def neighbors(self, cell):
         col, row = cell
@@ -95,8 +91,6 @@ class GameState:
                     visited[nb] = steps + 1
                     queue.append(nb)
         return visited
-
-    #  Step
 
     def commit_step(self, ff_dest, tp_dest) -> list[str]:
         if self.phase != Phase.ACTIVE:
@@ -134,20 +128,16 @@ class GameState:
         result  = self.scenario.check_win_loss(self)
         if result is not None:
             self.phase = result
-
         return events
 
 
 def new_game(scenario: Scenario) -> GameState:
     return GameState(
-        scenario    = scenario,
+        scenario = scenario,
         firefighter = TokenState(pos=scenario.firefighter_start, hp=scenario.firefighter_hp),
-        trapped     = TokenState(pos=scenario.trapped_start,     hp=scenario.trapped_hp),
-        env         = scenario.initial_env(),
+        trapped = TokenState(pos=scenario.trapped_start, hp=scenario.trapped_hp),
+        env = scenario.initial_env(),
     )
-
-
-#  CV
 
 def detect_both(frame, board: Board, scenario: Scenario):
     hsv = cv2.cvtColor(cv2.GaussianBlur(frame, (11, 11), 0), cv2.COLOR_BGR2HSV)
@@ -175,32 +165,21 @@ def board_to_grid(board_pos, scenario: Scenario):
     return (max(0, min(scenario.cols - 1, col)),
             max(0, min(scenario.rows - 1, row)))
 
-
-#  Pygame rendering
-
-C_BG      = (40,  40,  40)
-C_GRID    = (80,  80,  80)
-C_WALL    = (200, 200, 200)
-C_EXIT    = (0,   220, 100)
-C_FF      = (220, 60,  60)
-C_TRAPPED = (60,  100, 220)
-C_HUD_BG  = (20,  20,  20)
-C_TEXT    = (230, 230, 230)
-C_WIN     = (30,  180, 30)
-C_LOSS    = (180, 30,  30)
-
-# Scenario-supplied env keys to colors — renderable if present in env
-ENV_COLORS = {
-    "fire":  (220, 100, 0),
-    "smoke": (120, 120, 120),
-}
-
+def draw_grid_overlay(frame, board: Board, scenario: Scenario):
+    """Draw the scenario's cell grid onto the camera frame."""
+    for c in range(scenario.cols + 1):
+        x = c / scenario.cols * BOARD_SIZE
+        pts = board.to_camera([(x, 0), (x, BOARD_SIZE)]).astype(np.int32)
+        cv2.line(frame, tuple(pts[0]), tuple(pts[1]), (255, 255, 0), 1)
+    for r in range(scenario.rows + 1):
+        y = r / scenario.rows * BOARD_SIZE
+        pts = board.to_camera([(0, y), (BOARD_SIZE, y)]).astype(np.int32)
+        cv2.line(frame, tuple(pts[0]), tuple(pts[1]), (255, 255, 0), 1)
 
 def render(screen, font, big_font, state: GameState, pending_ff, pending_tp):
     scenario = state.scenario
     screen.fill(C_BG)
 
-    # Cells
     for col in range(scenario.cols):
         for row in range(scenario.rows):
             cell = (col, row)
@@ -220,15 +199,15 @@ def render(screen, font, big_font, state: GameState, pending_ff, pending_tp):
 
     # Walls
     for w in scenario.walls:
-        a, b   = tuple(w)
+        a, b = tuple(w)
         ac, ar = a
         bc, br = b
-        if ac == bc:  # horizontal wall
+        if ac == bc:
             top_row = min(ar, br) + 1
             x0 = ac * CELL_SIZE
             y  = top_row * CELL_SIZE
             pygame.draw.line(screen, C_WALL, (x0, y), (x0 + CELL_SIZE, y), 3)
-        else:         # vertical wall
+        else:
             left_col = min(ac, bc) + 1
             x  = left_col * CELL_SIZE
             y0 = ar * CELL_SIZE
@@ -258,10 +237,10 @@ def render(screen, font, big_font, state: GameState, pending_ff, pending_tp):
         # Check validity
         if label == "Firefighter":
             blocked = state.env.get("fire", set())
-            valid   = pending in state.reachable(state.firefighter.pos, state.scenario.firefighter_moves, blocked)
+            valid = pending in state.reachable(state.firefighter.pos, state.scenario.firefighter_moves, blocked)
         else:
             blocked = state.env.get("fire", set())
-            valid   = state.ff_found_patient and pending in state.reachable(state.trapped.pos, state.scenario.trapped_moves, blocked)
+            valid = state.ff_found_patient and pending in state.reachable(state.trapped.pos, state.scenario.trapped_moves, blocked)
 
         if not valid:
             warning = font.render("Invalid", True, (255, 60, 60))
@@ -276,13 +255,12 @@ def render(screen, font, big_font, state: GameState, pending_ff, pending_tp):
     # Win / loss overlay
     if state.phase in (Phase.WIN, Phase.LOSS):
         overlay = pygame.Surface((scenario.cols * CELL_SIZE, scenario.rows * CELL_SIZE), pygame.SRCALPHA)
-        color   = C_WIN if state.phase == Phase.WIN else C_LOSS
+        color = C_WIN if state.phase == Phase.WIN else C_LOSS
         overlay.fill((*color, 180))
         screen.blit(overlay, (0, 0))
         label = "Successful Rescue!" if state.phase == Phase.WIN else "Rescue Failed."
         text  = big_font.render(label, True, (255, 255, 255))
         screen.blit(text, text.get_rect(center=(scenario.cols * CELL_SIZE // 2, scenario.rows * CELL_SIZE // 2)))
-
     pygame.display.flip()
 
 
@@ -292,22 +270,19 @@ def render_setup(screen, font, scenario: Scenario):
         screen.blit(font.render(line, True, C_TEXT), (40, 80 + i * 40))
     pygame.display.flip()
 
-
-#  Main loop
-
 def main():
     load_dotenv()
     scenario = EXAMPLE_SCENARIO
 
     pygame.init()
-    screen   = pygame.display.set_mode((scenario.cols * CELL_SIZE, scenario.rows * CELL_SIZE + HUD_HEIGHT))
+    screen = pygame.display.set_mode((scenario.cols * CELL_SIZE, scenario.rows * CELL_SIZE + HUD_HEIGHT))
     pygame.display.set_caption(f"Fire Evacuation — {scenario.name}")
-    font     = pygame.font.SysFont("monospace", 20)
+    font = pygame.font.SysFont("monospace", 20)
     big_font = pygame.font.SysFont("monospace", 36, bold=True)
-    clock    = pygame.time.Clock()
+    clock = pygame.time.Clock()
 
-    state      = new_game(scenario)
-    board      = None
+    state = new_game(scenario)
+    board = None
     last_index = -1
     pending_ff = None
     pending_tp = None
@@ -321,7 +296,6 @@ def main():
 
         running = True
         while running:
-
             # OpenCV input
             key = cv2.waitKey(1) & 0xFF
             if key == ord("q"):
@@ -338,6 +312,7 @@ def main():
                 frame = f.image.copy()
                 pending_ff, pending_tp = detect_both(frame, board, scenario)
                 cv2.polylines(frame, [board.corners_px.astype(np.int32)], True, (0, 255, 0), 2)
+                draw_grid_overlay(frame, board, scenario)
                 cv2.imshow("camera", frame)
 
             # Pygame events
@@ -365,12 +340,9 @@ def main():
                 ff_grid_pending = board_to_grid(pending_ff, scenario) if pending_ff else None
                 tp_grid_pending = board_to_grid(pending_tp, scenario) if pending_tp else None
                 render(screen, font, big_font, state, ff_grid_pending, tp_grid_pending)
-
             clock.tick(30)
-
     cv2.destroyAllWindows()
     pygame.quit()
-
 
 if __name__ == "__main__":
     main()
