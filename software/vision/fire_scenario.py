@@ -7,7 +7,6 @@ from __future__ import annotations
 import random
 from dataclasses import dataclass, field
 
-#bull shit
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
