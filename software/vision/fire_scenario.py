@@ -51,7 +51,7 @@ def on_step_end(state: GameState) -> list[str]:
 
 def check_win_loss(state: GameState):
     """Returns a Phase if the game has ended, otherwise None."""
-    from core import Phases
+    from core import Phase
     if state.firefighter.hp <= 0 or state.trapped.hp <= 0:
         return Phase.LOSS
     if state.trapped.pos == state.scenario.exit_cell and state.ff_found_patient:
