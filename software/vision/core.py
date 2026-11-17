@@ -6,6 +6,7 @@ TODO: Timothy Macias
 References:
 """
 import cv2
+import sys
 import pygame
 import numpy as np
 import os
@@ -43,7 +44,6 @@ ENV_COLORS = {
     "smoke": (120, 120, 120),
 }
 
-# Game state
 class Phase(Enum):
     SETUP = auto()
     ACTIVE = auto()
@@ -122,7 +122,6 @@ class GameState:
                 events.append(f"Patient moved to {tp_dest}.")
             else:
                 events.append(f"Patient move to {tp_dest} is invalid — skipped.")
-
         # Scenario hooks
         events += self.scenario.on_step_end(self)
         result  = self.scenario.check_win_loss(self)
@@ -293,56 +292,59 @@ def main():
             raise SystemExit("Calibration failed.")
         board = Board(corners)
         print("Board locked. SPACE to start, N to commit a step, R to recalibrate, Q to quit.")
-
-        running = True
-        while running:
-            # OpenCV input
-            key = cv2.waitKey(1) & 0xFF
-            if key == ord("q"):
-                running = False
-            if key == ord("r"):
-                new_corners = calibrate(cam)
-                if new_corners is not None:
-                    board = Board(new_corners)
-
-            # Capture + detect
-            f = cam.read()
-            if f is not None and f.index != last_index:
-                last_index = f.index
-                frame = f.image.copy()
-                pending_ff, pending_tp = detect_both(frame, board, scenario)
-                cv2.polylines(frame, [board.corners_px.astype(np.int32)], True, (0, 255, 0), 2)
-                draw_grid_overlay(frame, board, scenario)
-                cv2.imshow("camera", frame)
-
-            # Pygame events
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
+        try:
+            running = True
+            while running:
+                key = cv2.waitKey(1) & 0xFF
+                if key == ord("q"):
                     running = False
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        running = False
-                    elif event.key == pygame.K_SPACE and state.phase == Phase.SETUP:
-                        state.phase = Phase.ACTIVE
-                        print("Game started.")
-                    elif event.key == pygame.K_n and state.phase == Phase.ACTIVE:
-                        ff_grid = board_to_grid(pending_ff, scenario) if pending_ff else None
-                        tp_grid = board_to_grid(pending_tp, scenario) if pending_tp else None
-                        for e in state.commit_step(ff_grid, tp_grid):
-                            print(e)
-                    elif event.key == pygame.K_r and state.phase in (Phase.WIN, Phase.LOSS):
-                        state = new_game(scenario)
+                    break
+                if key == ord("r"):
+                    new_corners = calibrate(cam)
+                    if new_corners is not None:
+                        board = Board(new_corners)
 
-            # Render
-            if state.phase == Phase.SETUP:
-                render_setup(screen, font, scenario)
-            else:
-                ff_grid_pending = board_to_grid(pending_ff, scenario) if pending_ff else None
-                tp_grid_pending = board_to_grid(pending_tp, scenario) if pending_tp else None
-                render(screen, font, big_font, state, ff_grid_pending, tp_grid_pending)
-            clock.tick(30)
-    cv2.destroyAllWindows()
-    pygame.quit()
+                f = cam.read()
+                if f is not None and f.index != last_index:
+                    last_index = f.index
+                    frame = f.image.copy()
+                    pending_ff, pending_tp = detect_both(frame, board, scenario)
+                    cv2.polylines(frame, [board.corners_px.astype(np.int32)], True, (0, 255, 0), 2)
+                    draw_grid_overlay(frame, board, scenario)
+                    cv2.imshow("camera", frame)
+
+                # Pygame events
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        running = False
+                        break
+                    elif event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_SPACE and state.phase == Phase.SETUP:
+                            state.phase = Phase.ACTIVE
+                            print("Game started.")
+                        elif event.key == pygame.K_n and state.phase == Phase.ACTIVE:
+                            ff_grid = board_to_grid(pending_ff, scenario) if pending_ff else None
+                            tp_grid = board_to_grid(pending_tp, scenario) if pending_tp else None
+                            for e in state.commit_step(ff_grid, tp_grid):
+                                print(e)
+                        elif event.key == pygame.K_r and state.phase in (Phase.WIN, Phase.LOSS):
+                            state = new_game(scenario)
+                if state.phase == Phase.SETUP:
+                    render_setup(screen, font, scenario)
+                else:
+                    ff_grid_pending = board_to_grid(pending_ff, scenario) if pending_ff else None
+                    tp_grid_pending = board_to_grid(pending_tp, scenario) if pending_tp else None
+                    render(screen, font, big_font, state, ff_grid_pending, tp_grid_pending)
+                clock.tick(30)
+        except KeyboardInterrupt:
+            print("Program recieved SIGINT")
+
+        finally:
+            cv2.destroyAllWindows()
+            cv2.waitKey(1)
+            pygame.display.quit() # https://stackoverflow.com/questions/19882415/closing-pygame-window
+            pygame.quit()
+            print("GUI closed, releasing camera...")
 
 if __name__ == "__main__":
     main()
