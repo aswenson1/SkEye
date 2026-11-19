@@ -19,6 +19,7 @@ from board import BOARD_SIZE, Board
 from camera import Camera
 from camera_calibration import calibrate
 from color_detect import PRESETS, make_mask, find_objects, draw
+from L_detection import brick_mask
 
 from fire_scenario import EXAMPLE_SCENARIO, Scenario
 
@@ -141,8 +142,12 @@ def new_game(scenario: Scenario) -> GameState:
 def detect_both(frame, board: Board, scenario: Scenario):
     hsv = cv2.cvtColor(cv2.GaussianBlur(frame, (11, 11), 0), cv2.COLOR_BGR2HSV)
 
-    ff_objects = find_objects(make_mask(hsv, PRESETS[scenario.firefighter_color]))
-    tp_objects = find_objects(make_mask(hsv, PRESETS[scenario.trapped_color]))
+    not_bricks = cv2.bitwise_not(brick_mask(frame))
+    ff_mask = cv2.bitwise_and(make_mask(hsv, PRESETS[scenario.firefighter_color]), not_bricks)
+    tp_mask = cv2.bitwise_and(make_mask(hsv, PRESETS[scenario.trapped_color]), not_bricks)
+    ff_objects = find_objects(ff_mask)
+    tp_objects = find_objects(tp_mask)
+
 
     draw(frame, ff_objects, scenario.firefighter_color)
     draw(frame, tp_objects, scenario.trapped_color)

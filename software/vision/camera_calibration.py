@@ -17,7 +17,7 @@ import os
 import time
 import sys
 import numpy as np
-from corner_detection import detect_markers, detect_corners_from_markers
+from L_detection import detect_shapes, detect_corners_from_shapes
 
 
 # Config Variables!
@@ -36,14 +36,11 @@ GREEN, RED = (0, 200, 0), (0, 0, 255)
 
 # Tests return a status boolean and a message
 # Checks if all four corner markers were found
-def check_markers(ids):
-    found = set() if ids is None else set(int(i) for i in ids.flatten())
-    missing = {0, 1, 2, 3} - found
-    if missing:
-        return False, f"Markers missing: {sorted(missing)}"
-    if found != {0, 1, 2, 3}:
-        return False, f"Unexpected markers visible: {sorted(found - {0, 1, 2, 3})}"
-    return True, "All 4 markers detected"
+def check_pieces(shapes):
+    n = len(shapes)
+    if n == 4:
+        return True, "All 4 Corner Pieces Detected"
+    return False, f"Corner Pieces Found: {n}/4"
 
 # Checks if the board is in frame correctly or not
 def check_in_frame(board, shape):
@@ -96,15 +93,15 @@ def check_shape(board):
 
 def evaluate_frame(img, history):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    corners, ids = detect_markers(img)
-    results = [check_markers(ids), check_brightness(gray), check_sharpness(gray)]
+    shapes = detect_shapes(img)
+    results = [check_pieces(shapes), check_brightness(gray), check_sharpness(gray)]
 
-    board = detect_corners_from_markers(corners, ids) if results[0][0] else None
+    board = detect_corners_from_shapes(shapes) if results[0][0] else None
     if board is None:
-        history.clear()  # lost the board, restart the stability count
+        history.clear()
         return results, None
 
-    board = np.asarray(board, dtype=np.float32)
+    board = np.array(board, dtype=np.float32)
     history.append(board)
     results += [check_in_frame(board, img.shape),
                 check_size(board, img.shape),
