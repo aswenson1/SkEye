@@ -2,6 +2,10 @@
 *.o
 *.a
 
+# Documentation
+site/
+.venv/
+
 #KiCad
 *.000
 *.bak
