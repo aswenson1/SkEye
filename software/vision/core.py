@@ -6,7 +6,6 @@ TODO: Timothy Macias
 References:
 """
 import cv2
-import sys
 import pygame
 import numpy as np
 import os
