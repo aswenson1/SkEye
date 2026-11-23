@@ -17,7 +17,8 @@ import os
 import time
 import sys
 import numpy as np
-from L_detection import detect_shapes, detect_corners_from_shapes
+from L_detection import detect_shapes, detect_corners_from_shapes, brick_mask
+from color_detect import set_ignore_mask
 
 
 # Config Variables!
@@ -35,12 +36,14 @@ MAX_JITTER_PX = 10.0
 GREEN, RED = (0, 200, 0), (0, 0, 255)
 
 # Tests return a status boolean and a message
-# Checks if all four corner markers were found
-def check_pieces(shapes):
+# Checks if all four corner L pieces were found
+def check_markers(shapes):
     n = len(shapes)
-    if n == 4:
-        return True, "All 4 Corner Pieces Detected"
-    return False, f"Corner Pieces Found: {n}/4"
+    if n < 4:
+        return False, f"Markers missing: {n}/4 detected"
+    if n > 4:
+        return False, f"Unexpected markers visible: {n}/4 detected"
+    return True, "All 4 markers detected"
 
 # Checks if the board is in frame correctly or not
 def check_in_frame(board, shape):
@@ -94,9 +97,10 @@ def check_shape(board):
 def evaluate_frame(img, history):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     shapes = detect_shapes(img)
-    results = [check_pieces(shapes), check_brightness(gray), check_sharpness(gray)]
-
+    results = [check_markers(shapes), check_brightness(gray), check_sharpness(gray)]
     board = detect_corners_from_shapes(shapes) if results[0][0] else None
+    if results[0][0] and board is None:
+        results[0] = (False, "Markers detected but corners are unclear")
     if board is None:
         history.clear()
         return results, None
@@ -140,6 +144,7 @@ def calibrate(cam):
 
         if len(results) == 7 and all(ok for ok, _ in results):
             corners = np.mean(np.stack(history), axis=0)
+            set_ignore_mask(brick_mask(f.image))
             break
 
         # Live feedback overlay

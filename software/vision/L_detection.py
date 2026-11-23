@@ -80,11 +80,7 @@ def _outer_vertex(contour, group_center):
 
 def brick_mask(image, dilate_px=9):
     """
-    Mask (255 = brick) covering every L piece in the image
-
-    Use it to ignore the pieces when looking for objects of the same color. Any
-    pixel of that color touching a piece is part of its outline, so this also
-    covers slivers and side faces; dilate_px grows it a little past the edges.
+    Mask to ignore the L piece bricks when detecting colors on the board (buggy wip))
     """
     mask = np.zeros(image.shape[:2], dtype=np.uint8)
     cv2.drawContours(mask, [s["contour"] for s in detect_shapes(image)], -1, 255, cv2.FILLED)
