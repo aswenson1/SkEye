@@ -30,7 +30,7 @@ MIN_BOARD_AREA_FRAC = 0.15
 MAX_ASPECT_SKEW = 0.35
 MIN_BRIGHTNESS = 60
 MAX_BRIGHTNESS = 200
-MIN_SHARPNESS = 50.0
+MIN_SHARPNESS = 10.0
 MAX_JITTER_PX = 10.0
  
 GREEN, RED = (0, 200, 0), (0, 0, 255)
@@ -102,10 +102,10 @@ def evaluate_frame(img, history):
     if results[0][0] and board is None:
         results[0] = (False, "Markers detected but corners are unclear")
     if board is None:
-        history.clear()  # lost the board, restart the stability count
+        history.clear()
         return results, None
 
-    board = np.asarray(board, dtype=np.float32)
+    board = np.array(board, dtype=np.float32)
     history.append(board)
     results += [check_in_frame(board, img.shape),
                 check_size(board, img.shape),
