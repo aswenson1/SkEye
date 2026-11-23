@@ -165,6 +165,8 @@ def board_to_grid(board_pos, scenario: Scenario):
     bx, by = board_pos
     col = int(bx / BOARD_SIZE * scenario.cols)
     row = int(by / BOARD_SIZE * scenario.rows)
+    if not Board.contains((bx, by)):
+        return None
     return (max(0, min(scenario.cols - 1, col)),
             max(0, min(scenario.rows - 1, row)))
 
