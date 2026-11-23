@@ -151,12 +151,21 @@ def detect_both(frame, board: Board, scenario: Scenario):
     draw(frame, ff_objects, scenario.firefighter_color)
     draw(frame, tp_objects, scenario.trapped_color)
 
+    
     def best_pos(objects):
-        if not objects:
+        valid_objects = []
+
+        for obj in objects:
+            center = obj["center"]
+            board_pt = tuple(board.to_board([center])[0])
+            # checks to see if the object is inside the board (fixes bug issue 37)
+            if Board.contains(board_pt):
+                valid_objects.append((obj["area"], board_pt))
+        if not valid_objects:
             return None
-        center   = max(objects, key=lambda o: o["area"])["center"]
-        board_pt = tuple(board.to_board([center])[0])
-        return board_pt if Board.contains(board_pt) else None
+        # picks largest object and throws out smaller ones (prevents detection of fingers)
+        return max(valid_objects, key=lambda o: o[0])[1]
+
 
     return best_pos(ff_objects), best_pos(tp_objects)
 
