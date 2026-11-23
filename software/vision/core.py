@@ -138,14 +138,28 @@ def new_game(scenario: Scenario) -> GameState:
         env = scenario.initial_env(),
     )
 
+# TODO: move commonly used functions to a utils file/library
+def filter_board_objects(objects, board):
+    valid = []
+
+    for obj in objects:
+        center = obj["center"]
+        board_pt = tuple(board.to_board([center])[0])
+
+        if Board.contains(board_pt):
+            valid.append(obj)
+
+    return valid
+
+
 def detect_both(frame, board: Board, scenario: Scenario):
     hsv = cv2.cvtColor(cv2.GaussianBlur(frame, (11, 11), 0), cv2.COLOR_BGR2HSV)
 
     not_bricks = cv2.bitwise_not(brick_mask(frame))
     ff_mask = cv2.bitwise_and(make_mask(hsv, PRESETS[scenario.firefighter_color]), not_bricks)
     tp_mask = cv2.bitwise_and(make_mask(hsv, PRESETS[scenario.trapped_color]), not_bricks)
-    ff_objects = find_objects(ff_mask)
-    tp_objects = find_objects(tp_mask)
+    ff_objects = filter_board_objects(find_objects(ff_mask), board)
+    tp_objects = filter_board_objects(find_objects(tp_mask), board)
 
 
     draw(frame, ff_objects, scenario.firefighter_color)
