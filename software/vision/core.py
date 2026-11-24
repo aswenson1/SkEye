@@ -138,25 +138,48 @@ def new_game(scenario: Scenario) -> GameState:
         env = scenario.initial_env(),
     )
 
+# TODO: move commonly used functions to a utils file/library
+def filter_board_objects(objects, board):
+    valid = []
+
+    for obj in objects:
+        center = obj["center"]
+        board_pt = tuple(board.to_board([center])[0])
+
+        if Board.contains(board_pt):
+            valid.append(obj)
+
+    return valid
+
+
 def detect_both(frame, board: Board, scenario: Scenario):
     hsv = cv2.cvtColor(cv2.GaussianBlur(frame, (11, 11), 0), cv2.COLOR_BGR2HSV)
 
     not_bricks = cv2.bitwise_not(brick_mask(frame))
     ff_mask = cv2.bitwise_and(make_mask(hsv, PRESETS[scenario.firefighter_color]), not_bricks)
     tp_mask = cv2.bitwise_and(make_mask(hsv, PRESETS[scenario.trapped_color]), not_bricks)
-    ff_objects = find_objects(ff_mask)
-    tp_objects = find_objects(tp_mask)
+    ff_objects = filter_board_objects(find_objects(ff_mask), board)
+    tp_objects = filter_board_objects(find_objects(tp_mask), board)
 
 
     draw(frame, ff_objects, scenario.firefighter_color)
     draw(frame, tp_objects, scenario.trapped_color)
 
+    
     def best_pos(objects):
-        if not objects:
+        valid_objects = []
+
+        for obj in objects:
+            center = obj["center"]
+            board_pt = tuple(board.to_board([center])[0])
+            # checks to see if the object is inside the board (fixes bug issue 37)
+            if Board.contains(board_pt):
+                valid_objects.append((obj["area"], board_pt))
+        if not valid_objects:
             return None
-        center   = max(objects, key=lambda o: o["area"])["center"]
-        board_pt = tuple(board.to_board([center])[0])
-        return board_pt if Board.contains(board_pt) else None
+        # picks largest object and throws out smaller ones (prevents detection of fingers)
+        return max(valid_objects, key=lambda o: o[0])[1]
+
 
     return best_pos(ff_objects), best_pos(tp_objects)
 
