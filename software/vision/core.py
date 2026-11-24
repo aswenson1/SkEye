@@ -341,6 +341,13 @@ def main():
                     cv2.polylines(frame, [board.corners_px.astype(np.int32)], True, (0, 255, 0), 2)
                     draw_grid_overlay(frame, board, scenario)
                     cv2.imshow("camera", frame)
+                    try:
+                        if cv2.getWindowProperty("camera", cv2.WND_PROP_VISIBLE) < 1:
+                            running = False
+                            break
+                    except cv2.error:
+                        running = False
+                        break
 
                 # Pygame events
                 for event in pygame.event.get():
