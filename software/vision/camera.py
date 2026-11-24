@@ -62,10 +62,18 @@ class Camera:
         return self
 
     def stop(self):
+        if not self._running and self._thread is None:
+            return
+        print("Stopping camera...")
         self._running = False
-        if self._thread:
-            self._thread.join(timeout=1.0)
         self._cap.release()
+
+        if self._thread is not None:
+            self._thread.join(timeout=3.0)
+            if self._thread.is_alive():
+                print("WARNING: Camera thread did not terminate.")
+            self._thread = None
+        print("Camera stopped.")
 
     def __enter__(self):
         return self.start()
