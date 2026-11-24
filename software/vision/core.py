@@ -1,9 +1,9 @@
 """
 core.py - frame source for SkEye.
 
-TODO: Timothy Macias
+TODO: @timacias
 
-References:
+References:  https://stackoverflow.com/questions/19882415/closing-pygame-window
 """
 import cv2
 import pygame
@@ -302,7 +302,8 @@ def main():
     load_dotenv()
     scenario = EXAMPLE_SCENARIO
 
-    pygame.init()
+    pygame.display.init()
+    pygame.font.init()
     screen = pygame.display.set_mode((scenario.cols * CELL_SIZE, scenario.rows * CELL_SIZE + HUD_HEIGHT))
     pygame.display.set_caption(f"Fire Evacuation — {scenario.name}")
     font = pygame.font.SysFont("monospace", 20)
@@ -376,11 +377,12 @@ def main():
             print("Program recieved SIGINT")
 
         finally:
+            print("[Core] Entering cleanup...")
             cv2.destroyAllWindows()
             cv2.waitKey(1)
-            pygame.display.quit() # https://stackoverflow.com/questions/19882415/closing-pygame-window
             pygame.quit()
-            print("GUI closed, releasing camera...")
+            pygame.display.quit()
+            print("[Core] GUI closed, releasing camera...")
 
 if __name__ == "__main__":
     main()
