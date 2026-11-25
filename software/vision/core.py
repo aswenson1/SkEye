@@ -318,6 +318,7 @@ def main():
 
     with Camera(int(os.environ["CAMERA_DEVICE_NO"])) as cam:
         corners = calibrate(cam)
+        cv_window_created = False
         if corners is None:
             raise SystemExit("Calibration failed.")
         board = Board(corners)
@@ -335,13 +336,7 @@ def main():
                         board = Board(new_corners)
 
                 f = cam.read()
-                if f is not None and f.index != last_index:
-                    last_index = f.index
-                    frame = f.image.copy()
-                    pending_ff, pending_tp = detect_both(frame, board, scenario)
-                    cv2.polylines(frame, [board.corners_px.astype(np.int32)], True, (0, 255, 0), 2)
-                    draw_grid_overlay(frame, board, scenario)
-                    cv2.imshow("camera", frame)
+                if cv_window_created:
                     try:
                         if cv2.getWindowProperty("camera", cv2.WND_PROP_VISIBLE) < 1:
                             running = False
@@ -349,6 +344,15 @@ def main():
                     except cv2.error:
                         running = False
                         break
+
+                if f is not None and f.index != last_index:
+                    last_index = f.index
+                    frame = f.image.copy()
+                    pending_ff, pending_tp = detect_both(frame, board, scenario)
+                    cv2.polylines(frame, [board.corners_px.astype(np.int32)], True, (0, 255, 0), 2)
+                    draw_grid_overlay(frame, board, scenario)
+                    cv2.imshow("camera", frame)
+                    cv_window_created = True
 
                 # Pygame events
                 for event in pygame.event.get():
