@@ -1,9 +1,9 @@
 """
 core.py - frame source for SkEye.
 
-TODO: Timothy Macias
+TODO: @timacias
 
-References:
+References:  https://stackoverflow.com/questions/19882415/closing-pygame-window
 """
 import cv2
 import pygame
@@ -302,7 +302,8 @@ def main():
     load_dotenv()
     scenario = EXAMPLE_SCENARIO
 
-    pygame.init()
+    pygame.display.init()
+    pygame.font.init()
     screen = pygame.display.set_mode((scenario.cols * CELL_SIZE, scenario.rows * CELL_SIZE + HUD_HEIGHT))
     pygame.display.set_caption(f"Fire Evacuation — {scenario.name}")
     font = pygame.font.SysFont("monospace", 20)
@@ -317,6 +318,7 @@ def main():
 
     with Camera(int(os.environ["CAMERA_DEVICE_NO"])) as cam:
         corners = calibrate(cam)
+        cv_window_created = False
         if corners is None:
             raise SystemExit("Calibration failed.")
         board = Board(corners)
@@ -334,6 +336,15 @@ def main():
                         board = Board(new_corners)
 
                 f = cam.read()
+                if cv_window_created:
+                    try:
+                        if cv2.getWindowProperty("camera", cv2.WND_PROP_VISIBLE) < 1:
+                            running = False
+                            break
+                    except cv2.error:
+                        running = False
+                        break
+
                 if f is not None and f.index != last_index:
                     last_index = f.index
                     frame = f.image.copy()
@@ -341,6 +352,7 @@ def main():
                     cv2.polylines(frame, [board.corners_px.astype(np.int32)], True, (0, 255, 0), 2)
                     draw_grid_overlay(frame, board, scenario)
                     cv2.imshow("camera", frame)
+                    cv_window_created = True
 
                 # Pygame events
                 for event in pygame.event.get():
@@ -369,11 +381,12 @@ def main():
             print("Program recieved SIGINT")
 
         finally:
+            print("[Core] Entering cleanup...")
             cv2.destroyAllWindows()
             cv2.waitKey(1)
-            pygame.display.quit() # https://stackoverflow.com/questions/19882415/closing-pygame-window
             pygame.quit()
-            print("GUI closed, releasing camera...")
+            pygame.display.quit()
+            print("[Core] GUI closed, releasing camera...")
 
 if __name__ == "__main__":
     main()

@@ -62,10 +62,20 @@ class Camera:
         return self
 
     def stop(self):
+        print("[Camera] Stop requested", flush=True)
         self._running = False
-        if self._thread:
-            self._thread.join(timeout=1.0)
+        
+        if self._thread is not None:
+            print("[Camera] Joining capture thread...", flush=True)
+            self._thread.join(timeout=3.0)
+            if self._thread.is_alive():
+                print("[Camera] WARNING: Thread did not terminate!", flush=True)
+                return
+            print("[Camera] Capture thread stopped.", flush=True)
+            self._thread = None
+        print("[Camera] Releasing camera...", flush=True)
         self._cap.release()
+        print("[Camera] Shutdown finished.", flush=True)
 
     def __enter__(self):
         return self.start()
@@ -79,15 +89,17 @@ class Camera:
 
     def _loop(self):
         while self._running:
-            ok, img = self._cap.read()
-            if not ok:
-                time.sleep(0.01)
-                continue
+            try:
+                ok, img = self._cap.read()
+            except cv2.error:
+                    if not self._running:
+                        break
+                    time.sleep(0.01)
+                    continue
             frame = Frame(img, time.perf_counter(), self._index + 1)
             with self._lock:
                 self._frame = frame
                 self._index += 1
-
 
 if __name__ == "__main__":
     load_dotenv()

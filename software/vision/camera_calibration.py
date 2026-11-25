@@ -167,7 +167,7 @@ def calibrate(cam):
         if cv2.getWindowProperty(window_name, cv2.WND_PROP_VISIBLE) < 1:
             break
 
-    cv2.destroyAllWindows()
+    cv2.destroyWindow(window_name)
 
     print("Calibration report:")
     for ok, msg in results:
